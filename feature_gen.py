@@ -7,6 +7,7 @@ import numpy as np
 from sklearn import preprocessing
 from gensim.models import Word2Vec
 
+
 """ public variables """
 random_state = None  # random state, none -> random
 verbose = True  # print to console on/off
@@ -58,6 +59,7 @@ def build_wc_vec(recipe_ingrdnts, model, size):
                 print 'error trying to transform %s' % ingrdnt
                 continue
         features_matrix[idx_recipe, :] /= float(n_ingrdnts)
+        # TODO: 1. make avg optional 2. try euc distance instead of summation
     return features_matrix
 
 
@@ -67,16 +69,16 @@ def generate_wc_setup():
     print '\nloading training data...'
     train_df, cuisine_encoder = load_wc_data('data/train.json')
     feature_vec_size = 100
-    wc_recipe_ingrdnts = train_df['ingredients']
+    wc_train_recipe_ingrdnts = train_df['ingredients']
     print 'building size %s vectors...' % feature_vec_size
-    wc_features_model = build_wc_model(wc_recipe_ingrdnts,
+    wc_features_model = build_wc_model(wc_train_recipe_ingrdnts,
         size=feature_vec_size, n_jobs=n_cores)
-    wc_features = build_wc_vec(wc_recipe_ingrdnts,
+    wc_train_features = build_wc_vec(wc_train_recipe_ingrdnts,
         wc_features_model, feature_vec_size)
     return {
         'train': {
             'df': train_df,
-            'features_matrix': wc_features,
+            'features_matrix': wc_train_features,
         },
         'label_encoder': cuisine_encoder,
         'model': wc_features_model
