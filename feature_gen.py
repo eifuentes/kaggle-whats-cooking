@@ -68,7 +68,7 @@ def generate_wc_setup():
     n_cores = multiprocessing.cpu_count()
     print '\nloading training data...'
     train_df, cuisine_encoder = load_wc_data('data/train.json')
-    feature_vec_size = 100
+    feature_vec_size = 200
     wc_train_recipe_ingrdnts = train_df['ingredients']
     print 'building size %s vectors...' % feature_vec_size
     wc_features_model = build_wc_model(wc_train_recipe_ingrdnts,
