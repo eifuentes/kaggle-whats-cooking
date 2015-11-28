@@ -41,7 +41,7 @@ def main(random_state=None, std=False):
 
     # RandomForestClassifier: accuracy: 0.66257 (+/- 0.00761), cv 8-fold, 119.448 seconds
     clf = RandomForestClassifier(n_estimators=100, max_depth=None,
-        n_jobs=-1, random_state=random_state, verbose=2)
+        n_jobs=-1, random_state=random_state, verbose=1)
 
     # perform cross validation
     cv_n_fold = 8

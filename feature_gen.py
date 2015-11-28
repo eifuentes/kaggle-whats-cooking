@@ -2,6 +2,7 @@
 generates features from kaggle what's cooking competition's data
 """
 import multiprocessing
+from collections import Counter
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
@@ -43,8 +44,21 @@ def build_wc_model(recipe_ingrdnts, size=100, n_jobs=1):
     return model
 
 
+""" count ingredients in all recipes """
+def count_ingrdnts(recipe_ingrdnts, tf_idf=False):
+    all_ingrdnts = []
+    for ingrdnts in recipe_ingrdnts:
+        all_ingrdnts += ingrdnts
+    counts = Counter(all_ingrdnts)
+    if tf_idf:
+        total_n_ingrdnts = float(len(all_ingrdnts))
+        for key in counts:
+            counts[key] = 1.0 - (counts[key] / total_n_ingrdnts)
+    return counts
+
+
 """ build what's cooking recipe vector representations aka feature matrix """
-def build_wc_vec(recipe_ingrdnts, model, size, avg=True):
+def build_wc_vec(recipe_ingrdnts, model, size, avg=True, tf=None):
     if verbose:
         print 'building feature vectors...'
     n_recipes = len(recipe_ingrdnts)
@@ -53,7 +67,11 @@ def build_wc_vec(recipe_ingrdnts, model, size, avg=True):
         n_ingrdnts = 0
         for ingrdnt in recipe:
             try:
-                features_matrix[idx_recipe, :] += model[ingrdnt]
+                temp_vec = model[ingrdnt]
+                if tf:
+                    features_matrix[idx_recipe, :] += (temp_vec * tf[ingrdnt])
+                else:
+                    features_matrix[idx_recipe, :] += temp_vec
                 n_ingrdnts += 1
             except:
                 print 'error trying to transform %s' % ingrdnt
@@ -69,11 +87,13 @@ def generate_wc_setup(feature_vec_size=200, avg=True):
     print '\nloading training data...'
     train_df, cuisine_encoder = load_wc_data('data/train.json')
     wc_train_recipe_ingrdnts = train_df['ingredients']
+    print 'counting ingredient...'
+    wc_ingrdnts_counts = count_ingrdnts(wc_train_recipe_ingrdnts, tf_idf=True)
     print 'building size %s vectors...' % feature_vec_size
     wc_features_model = build_wc_model(wc_train_recipe_ingrdnts,
         size=feature_vec_size, n_jobs=n_cores)
     wc_train_features = build_wc_vec(wc_train_recipe_ingrdnts,
-        wc_features_model, feature_vec_size, avg=avg)
+        wc_features_model, feature_vec_size, avg=avg, tf=wc_ingrdnts_counts)
     return {
         'train': {
             'df': train_df,
