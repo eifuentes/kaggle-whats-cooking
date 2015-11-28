@@ -44,7 +44,7 @@ def build_wc_model(recipe_ingrdnts, size=100, n_jobs=1):
 
 
 """ build what's cooking recipe vector representations aka feature matrix """
-def build_wc_vec(recipe_ingrdnts, model, size):
+def build_wc_vec(recipe_ingrdnts, model, size, avg=True):
     if verbose:
         print 'building feature vectors...'
     n_recipes = len(recipe_ingrdnts)
@@ -58,23 +58,22 @@ def build_wc_vec(recipe_ingrdnts, model, size):
             except:
                 print 'error trying to transform %s' % ingrdnt
                 continue
-        features_matrix[idx_recipe, :] /= float(n_ingrdnts)
-        # TODO: 1. make avg optional 2. try euc distance instead of summation
+        if avg:
+            features_matrix[idx_recipe, :] /= float(n_ingrdnts)
     return features_matrix
 
 
 """ generate what's cooking feature matrix & components """
-def generate_wc_setup():
+def generate_wc_setup(feature_vec_size=200, avg=True):
     n_cores = multiprocessing.cpu_count()
     print '\nloading training data...'
     train_df, cuisine_encoder = load_wc_data('data/train.json')
-    feature_vec_size = 200
     wc_train_recipe_ingrdnts = train_df['ingredients']
     print 'building size %s vectors...' % feature_vec_size
     wc_features_model = build_wc_model(wc_train_recipe_ingrdnts,
         size=feature_vec_size, n_jobs=n_cores)
     wc_train_features = build_wc_vec(wc_train_recipe_ingrdnts,
-        wc_features_model, feature_vec_size)
+        wc_features_model, feature_vec_size, avg=avg)
     return {
         'train': {
             'df': train_df,
