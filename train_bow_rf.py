@@ -1,3 +1,4 @@
+""" use bag of words recipe representations to build a random forest classifier """
 import time
 from features_bow import *
 from sklearn.preprocessing import StandardScaler
@@ -6,9 +7,10 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.cross_validation import cross_val_score
 
 
+""" train random forest classifier with tf-idf recipe representations """
 def train_wc(cv_n_fold=8, random_state=None, n_jobs=1, verbose=0):
     # use term frequencey inverse document frequencey feature representation
-    wc_components = build_tfidf_wc(verbose=verbose)
+    wc_components = build_tfidf_wc(verbose=(verbose > 0))
     # prepare training set
     y_train = wc_components['train']['df']['cuisine_code'].as_matrix()
     X_train = wc_components['train']['features_matrix']
@@ -30,6 +32,7 @@ def train_wc(cv_n_fold=8, random_state=None, n_jobs=1, verbose=0):
     return wc_components, clf
 
 
+""" apply transforms & classifier to what's cooking test set """
 def test_wc(encoder, vectorizer, clf, verbose=False):
     wc_test_df = pd.read_json('data/test.json', orient='records')
     wc_test_recipe_ingrdnts = clean_recipes(wc_test_df['ingredients'].as_matrix(), verbose=verbose)
@@ -41,6 +44,7 @@ def test_wc(encoder, vectorizer, clf, verbose=False):
     wc_test_predict_df.to_csv('data/submission_bow_rf.csv')
 
 
+""" train & test bag of words random forest classifier """
 def run(n_jobs=-1, verbose=1):
     components, clf = train_wc(cv_n_fold=0, n_jobs=n_jobs, verbose=verbose)
     test_wc(components['label_encoder'], components['model'], clf, verbose=(verbose > 0))

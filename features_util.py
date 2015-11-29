@@ -1,3 +1,4 @@
+""" common feature generation utility functions """
 import unicodedata
 from collections import Counter
 import pandas as pd
@@ -28,19 +29,23 @@ def load_wc_data(path, encoder=None, shuffle=True, verbose=False):
     return df, encoder
 
 
+""" normalize ingredient string """
 def normalize_str(value):
     return unicodedata.normalize('NFKD', value.strip()).encode('ASCII', 'ignore').lower()
 
 
+""" lemmatize ingredient string """
 wnltz = WordNetLemmatizer()
 def lemmatize_str(value):
     return wnltz.lemmatize(value)
 
 
+""" normalize & lemmentize set of ingredients in a recipe """
 def clean_recipe(recipe_ingrdnts):
     return [' '.join(lemmatize_str(normalize_str(i)) for i in ingrdnts.split(' ')) for ingrdnts in recipe_ingrdnts]
 
 
+""" normalize & lemmentize all recipes """
 def clean_recipes(recipes, verbose=False):
     if verbose:
         print 'cleaning all %s recipes...' % len(recipes)
@@ -51,12 +56,14 @@ def clean_recipes(recipes, verbose=False):
     return recipes
 
 
+""" combine recipe ingredients into a single string aka doc """
 def build_recipe_docs(recipes):
     for idx, recipe in enumerate(recipes):
         recipes[idx] = ' '.join(recipe)
     return recipes
 
 
+""" main entry method """
 def main(verbose=True):
     train_df, cuisine_encoder = load_wc_data('data/train.json', verbose=verbose)
     wc_train_recipe_ingrdnts = clean_recipes(train_df['ingredients'].as_matrix(), verbose=verbose)

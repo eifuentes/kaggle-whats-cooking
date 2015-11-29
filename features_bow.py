@@ -1,7 +1,9 @@
+""" generate bag of words based feature representations """
 from features_util import *
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
+""" build train set with td-idf feature vectors """
 def build_tfidf_wc(verbose=False):
     train_df, cuisine_encoder = load_wc_data('data/train.json', verbose=verbose)
     wc_train_recipe_ingrdnts = clean_recipes(train_df['ingredients'].as_matrix(), verbose=verbose)
@@ -20,6 +22,7 @@ def build_tfidf_wc(verbose=False):
     }
 
 
+""" main entry method """
 def main(verbose=True):
     wc_components = build_tfidf_wc(verbose=verbose)
     print 'what\'s cooking features matrix of dim %s by %s' % wc_components['train']['features_matrix'].shape
