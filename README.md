@@ -1,6 +1,4 @@
-# What's Cooking?
-
-## Kaggle "What's Cooking" Competition Project
+# Kaggle "What's Cooking" Competition Project
 
 Given a list of recipes and their ingredients, the objective of this competition
 is to predict the type of cuisine category, e.g. Italian or Mexican, for each recipe.
