@@ -1,5 +1,6 @@
 """ common feature generation utility functions """
 import unicodedata
+import itertools
 from collections import Counter
 import pandas as pd
 import numpy as np
@@ -60,6 +61,14 @@ def clean_recipes(recipes, verbose=False):
 def build_recipe_docs(recipes):
     for idx, recipe in enumerate(recipes):
         recipes[idx] = ' '.join(recipe)
+    return recipes
+
+""" breakdown each recipe into single word ingredients """
+def flatten_recipes(recipes):
+    for idx, recipe in enumerate(recipes):
+        single_ingrdnts = [ingrdnts.split(' ') for ingrdnts in recipe]
+        flat_ingrdnts = itertools.chain(*single_ingrdnts)
+        recipes[idx] = list(flat_ingrdnts)
     return recipes
 
 
