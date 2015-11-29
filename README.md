@@ -1,2 +1,3 @@
-# kaggle_whats_cooking
+# What's Cooking?
+
 Kaggle "What's Cooking" Competition Project
