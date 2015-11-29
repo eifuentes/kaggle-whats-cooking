@@ -51,23 +51,16 @@ def clean_recipes(recipes, verbose=False):
     return recipes
 
 
-# """ count ingredients in all recipes """
-# def ingrdnts_idf(recipe_ingrdnts):
-#     all_ingrdnts = []
-#     for ingrdnts in recipe_ingrdnts:
-#         all_ingrdnts += ingrdnts
-#     counts = Counter(all_ingrdnts)
-#     if tf_idf:
-#         total_n_ingrdnts = float(len(all_ingrdnts))
-#         for key in counts:
-#             counts[key] = 1.0 - (counts[key] / total_n_ingrdnts)
-#     return counts
+def build_recipe_docs(recipes):
+    for idx, recipe in enumerate(recipes):
+        recipes[idx] = ' '.join(recipe)
+    return recipes
 
 
-def main():
-    train_df, cuisine_encoder = load_wc_data('data/train.json')
-    # wc_train_recipe_ingrdnts = train_df['ingredients']
-    # wc_ingrdnts_counts = count_ingrdnts(wc_train_recipe_ingrdnts, tf_idf=True)
+def main(verbose=True):
+    train_df, cuisine_encoder = load_wc_data('data/train.json', verbose=verbose)
+    wc_train_recipe_ingrdnts = clean_recipes(train_df['ingredients'].as_matrix(), verbose=verbose)
+
 
 if __name__ == '__main__':
     main()

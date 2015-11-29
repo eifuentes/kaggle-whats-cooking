@@ -7,58 +7,19 @@ import pandas as pd
 import numpy as np
 from sklearn import preprocessing
 from gensim.models import Word2Vec
-
-
-""" public variables """
-random_state = None  # random state, none -> random
-verbose = True  # print to console on/off
-
-
-""" load what's cooking data """
-def load_wc_data(path, encoder=None, shuffle=True):
-    # read kaggle data json
-    df = pd.read_json(path, orient='records')
-    n_records = len(df)
-    if verbose:
-        print 'loaded %s records' % n_records
-    # label encode cuisine
-    labels = df['cuisine'].as_matrix()
-    if not encoder:
-        encoder = preprocessing.LabelEncoder()
-        encoder.fit(labels)
-    labels_encoded = encoder.transform(labels)
-    target_df = pd.DataFrame({'cuisine_code': labels_encoded},
-        index=df.index)
-    # append encoded labels to original dataframe
-    df = pd.concat([df, target_df], axis=1)
-    if shuffle:
-        df = df.iloc[np.random.permutation(n_records)]
-    return df, encoder
+from features_util import *
 
 
 """ build what's cooking gensim Word2Vec model """
-def build_wc_model(recipe_ingrdnts, size=100, n_jobs=1):
+def build_word2vec_wc_model(recipe_ingrdnts, size=100, n_jobs=1, verbose=False):
     if verbose:
         print 'training Word2Vec model on %s recipes using %s cores...' % (len(recipe_ingrdnts), n_jobs)
     model = Word2Vec(recipe_ingrdnts, size=size, min_count=1, workers=n_jobs)
     return model
 
 
-""" count ingredients in all recipes """
-def count_ingrdnts(recipe_ingrdnts, tf_idf=False):
-    all_ingrdnts = []
-    for ingrdnts in recipe_ingrdnts:
-        all_ingrdnts += ingrdnts
-    counts = Counter(all_ingrdnts)
-    if tf_idf:
-        total_n_ingrdnts = float(len(all_ingrdnts))
-        for key in counts:
-            counts[key] = 1.0 - (counts[key] / total_n_ingrdnts)
-    return counts
-
-
 """ build what's cooking recipe vector representations aka feature matrix """
-def build_wc_vec(recipe_ingrdnts, model, size, avg=True, tf=None):
+def build_word2vec_wc_recipes(recipe_ingrdnts, model, size, avg=True, tf=None, verbose=False):
     if verbose:
         print 'building feature vectors...'
     n_recipes = len(recipe_ingrdnts)
@@ -82,18 +43,16 @@ def build_wc_vec(recipe_ingrdnts, model, size, avg=True, tf=None):
 
 
 """ generate what's cooking feature matrix & components """
-def generate_wc_setup(feature_vec_size=200, avg=True):
+def build_word2vec_wc(feature_vec_size=120, avg=True, verbose=False):
     n_cores = multiprocessing.cpu_count()
     print '\nloading training data...'
     train_df, cuisine_encoder = load_wc_data('data/train.json')
-    wc_train_recipe_ingrdnts = train_df['ingredients']
-    print 'counting ingredient...'
-    wc_ingrdnts_counts = count_ingrdnts(wc_train_recipe_ingrdnts, tf_idf=True)
+    wc_train_recipe_ingrdnts = clean_recipes(train_df['ingredients'].as_matrix(), verbose=verbose)
     print 'building size %s vectors...' % feature_vec_size
-    wc_features_model = build_wc_model(wc_train_recipe_ingrdnts,
-        size=feature_vec_size, n_jobs=n_cores)
-    wc_train_features = build_wc_vec(wc_train_recipe_ingrdnts,
-        wc_features_model, feature_vec_size, avg=avg, tf=wc_ingrdnts_counts)
+    wc_features_model = build_word2vec_wc_model(wc_train_recipe_ingrdnts,
+        size=feature_vec_size, n_jobs=n_cores, verbose=verbose)
+    wc_train_features = build_word2vec_wc_recipes(wc_train_recipe_ingrdnts,
+        wc_features_model, feature_vec_size, avg=avg, verbose=verbose)
     return {
         'train': {
             'df': train_df,
@@ -106,8 +65,13 @@ def generate_wc_setup(feature_vec_size=200, avg=True):
 
 """ main entry method """
 def main():
-    wc_components = generate_wc_setup()
+    wc_components = build_word2vec_wc(verbose=True)
     print 'what\'s cooking features matrix of dim %s by %s' % wc_components['train']['features_matrix'].shape
+    ingrdnt = 'soy sauce'
+    print '\nMost Similar Words to %s' % ingrdnt
+    similar_words = wc_components['model'].most_similar_cosmul(ingrdnt)
+    for word in similar_words:
+        print word
 
 
 if __name__ == '__main__':
