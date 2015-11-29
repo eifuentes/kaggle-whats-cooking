@@ -1,5 +1,5 @@
 import time
-from feature_gen import *
+from features_word2vec import *
 from sklearn.preprocessing import StandardScaler
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
@@ -8,13 +8,12 @@ from keras.utils import np_utils
 
 
 """ main entry method """
-def main(random_state=None, std=False):
+def main(random_state=None, std=False, verbose=True):
 
     # load, train, build feature vectors
-    feature_vec_size = 200
-    wc_components = generate_wc_setup(feature_vec_size=feature_vec_size, avg=True)
+    feature_vec_size = 120
+    wc_components = build_word2vec_wc(feature_vec_size=feature_vec_size, avg=True, verbose=verbose)
     n_categories = len(wc_components['label_encoder'].classes_)
-    print n_categories
     # prepare training set
     y_train = wc_components['train']['df']['cuisine_code'].as_matrix()
     Y_train = np_utils.to_categorical(y_train, n_categories)
@@ -31,8 +30,6 @@ def main(random_state=None, std=False):
     n_inputs = X_train.shape[1]
     n_hidden = [int(feature_vec_size * 1.5), int(feature_vec_size * 1.5)]
     X_train = X_train.astype("float32")
-    print n_inputs
-    print n_hidden
     model = Sequential()
     model.add(Dense(n_hidden[0], input_shape=(n_inputs,), activation='relu', init='glorot_uniform'))
     model.add(Dropout(0.5))
